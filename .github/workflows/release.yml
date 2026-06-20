@@ -53,7 +53,15 @@ jobs:
         run: pnpm make
 
       - name: List build output
-        run: find out -maxdepth 5 -type f | sort
+        run: |
+          pwd
+          ls -la
+          if [ -d out ]; then
+            find out -maxdepth 5 -type f | sort
+          else
+            echo "out directory does not exist"
+            find . -maxdepth 5 \( -name '*.deb' -o -name '*.rpm' \) -type f | sort
+          fi
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
