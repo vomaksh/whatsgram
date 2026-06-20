@@ -58,7 +58,7 @@ jobs:
           tag_name: v${{ steps.version.outputs.version }}
           generate_release_notes: true
           files: |
-            out/make/**/*.deb
-            out/make/**/*.rpm
+            out/make/deb/**/*.deb
+            out/make/rpm/**/*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
