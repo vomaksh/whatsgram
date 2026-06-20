@@ -35,21 +35,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Bump version
-        id: version
-        run: |
-          VERSION=$(node scripts/bump-version.mjs)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      # - name: Bump version
+      #   id: version
+      #   run: |
+      #     VERSION=$(node scripts/bump-version.mjs)
+      #     echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Commit version
-        if: ${{ env.ACT != 'true' }}
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add package.json
-          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || echo "No changes to commit"
-          git tag v${{ steps.version.outputs.version }}
-          git push origin HEAD --tags
+      # - name: Commit version
+      #   if: ${{ env.ACT != 'true' }}
+      #   run: |
+      #     git config user.name "github-actions"
+      #     git config user.email "github-actions@github.com"
+      #     git add package.json
+      #     git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || echo "No changes to commit"
+      #     git tag v${{ steps.version.outputs.version }}
+      #     git push origin HEAD --tags
 
       - name: Build whazzup
         run: |

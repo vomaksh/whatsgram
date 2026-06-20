@@ -16,7 +16,7 @@ const config: ForgeConfig = {
     asar: {
       unpack: "**/node_modules/{sharp,@img}/**/*",
     },
-    ignore: [],
+    // ignore: [],
     // ignore: (file) => {
     //   if (!file) {
     //     return false;
