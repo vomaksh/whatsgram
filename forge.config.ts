@@ -16,7 +16,17 @@ const config: ForgeConfig = {
     asar: {
       unpack: "**/node_modules/{sharp,@img}/**/*",
     },
-    ignore: [],
+    ignore: (file) => {
+      if (!file) {
+        return false;
+      }
+
+      return !(
+        file.startsWith("/.vite") ||
+        file === "/node_modules" ||
+        file.startsWith("/node_modules/")
+      );
+    },
     extraResource: ["assets"],
   },
   rebuildConfig: {},

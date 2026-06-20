@@ -63,12 +63,14 @@ jobs:
             echo "out directory does not exist"
             find . -maxdepth 5 \( -name '*.deb' -o -name '*.rpm' \) -type f | sort
           fi
+          test -n "$(find . -maxdepth 5 \( -name '*.deb' -o -name '*.rpm' \) -type f -print -quit)"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
             out/make/**/*.deb
             out/make/**/*.rpm
