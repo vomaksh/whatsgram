@@ -52,6 +52,9 @@ jobs:
       - name: Build whazzup
         run: pnpm make
 
+      - name: List build output
+        run: find out -maxdepth 5 -type f | sort
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
