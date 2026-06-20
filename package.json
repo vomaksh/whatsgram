@@ -1,7 +1,7 @@
 {
   "name": "whazzup",
   "productName": "WhazzUp",
-  "version": "26.06.9",
+  "version": "26.06.10",
   "description": "WhatsApp Client for Desktop",
   "main": ".vite/build/main.js",
   "private": true,
