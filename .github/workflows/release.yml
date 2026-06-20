@@ -54,7 +54,10 @@ jobs:
 
       - name: Build whazzup
         run: |
-          pnpm make
+          set -o pipefail
+          DEBUG=electron-forge:* pnpm make 2>&1 | tee forge-make.log
+          echo "exit=$?"
+          find out -maxdepth 8 -type f -print | sort || true
 
       - name: Upload to GitHub Release
         if: ${{ env.ACT != 'true' }}
