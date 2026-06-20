@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
@@ -60,11 +60,6 @@ jobs:
         if: always()
         run: |
           find / \( -name '*.deb' -o -name '*.rpm' \) -type f -print 2>/dev/null | sort || true
-
-      - name: Keep act container alive for debugging
-        run: |
-          echo "Debug shell requested. Exec into this container from another terminal."
-          sleep infinity
 
       - name: Upload to GitHub Release
         if: ${{ env.ACT != 'true' }}
