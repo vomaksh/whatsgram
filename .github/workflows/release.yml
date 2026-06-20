@@ -7,7 +7,7 @@ on:
 
 concurrency:
   group: release
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -29,7 +29,8 @@ jobs:
 
       - uses: pnpm/action-setup@v5
         with:
-          version: 10
+          version: 11.8.0
+          standalone: true
           cache: true
 
       - name: Install dependencies
@@ -38,50 +39,35 @@ jobs:
       - name: Bump version
         id: version
         run: |
-          VERSION=$(node scripts/bump-version.js)
+          VERSION=$(node scripts/bump-version.mjs)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit version
+        if: ${{ env.ACT != 'true' }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add package.json
-          git commit -m "chore: release v${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git commit -m "chore: release v${{ steps.version.outputs.version }} [skip ci]" || echo "No changes to commit"
           git tag v${{ steps.version.outputs.version }}
           git push origin HEAD --tags
 
       - name: Build whazzup
         run: |
-          set -o pipefail
-          DEBUG=electron-forge:* pnpm make 2>&1 | tee forge-make.log
+          pnpm make
 
-      - name: Debug build output
+      - name: Find Linux package artifacts
         if: always()
         run: |
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          pwd
-          ls -la
-          if [ -f forge-make.log ]; then
-            echo "---- Forge log: interesting lines ----"
-            grep -Ei "artifact|out/make|making|maker|package|deb|rpm|target|skip|error|warn" forge-make.log || true
-            echo "---- Forge log: last 160 lines ----"
-            tail -n 160 forge-make.log
-          else
-            echo "forge-make.log does not exist"
-          fi
-          echo "---- Workspace artifact search ----"
-          find "$GITHUB_WORKSPACE" -maxdepth 8 \( -name out -o -name '*.deb' -o -name '*.rpm' -o -name 'app.asar' \) -print | sort
-          echo "---- Runner work artifact search ----"
-          find /home/runner/work -maxdepth 8 \( -name out -o -name '*.deb' -o -name '*.rpm' -o -name 'app.asar' \) -print | sort
-          if [ -d out ]; then
-            find out -maxdepth 5 -type f | sort
-          else
-            echo "out directory does not exist"
-            find . -maxdepth 5 \( -name '*.deb' -o -name '*.rpm' \) -type f | sort
-          fi
-          test -n "$(find . -maxdepth 5 \( -name '*.deb' -o -name '*.rpm' \) -type f -print -quit)"
+          find / \( -name '*.deb' -o -name '*.rpm' \) -type f -print 2>/dev/null | sort || true
+
+      - name: Keep act container alive for debugging
+        run: |
+          echo "Debug shell requested. Exec into this container from another terminal."
+          sleep infinity
 
       - name: Upload to GitHub Release
+        if: ${{ env.ACT != 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
