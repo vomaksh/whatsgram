@@ -10,7 +10,6 @@ import {
   Tray,
   net,
   ipcMain,
-  nativeImage,
 } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
@@ -38,13 +37,12 @@ if (started) {
 app.setPath("userData", path.join(app.getPath("home"), ".config", APP_NAME));
 
 let config: AppConfigType = {};
-let tray: Tray = null;
+let tray: Tray;
 let isQuitting = false;
 const winBounds = {
   width: 1099,
   height: 800,
 };
-let currentFaviconUrl: string;
 
 function injectCSS(mainWindow: BrowserWindow, config: AppConfigType) {
   mainWindow.webContents.insertCSS(`
@@ -195,7 +193,7 @@ async function createWindow() {
   mainWindow.webContents.on("page-favicon-updated", async (ev, favicons) => {
     if (favicons.length > 0) {
       const newFaviconUrl = favicons[favicons.length - 1];
-      if (newFaviconUrl && newFaviconUrl !== currentFaviconUrl) {
+      if (newFaviconUrl && newFaviconUrl) {
         const unreadCount = getUnreadCountFromFavicon(newFaviconUrl);
         if (unreadCount && unreadCount != "0") {
           const trayNativeImg = await getTrayFavicon(unreadCount);
@@ -242,7 +240,8 @@ async function setupTray(app: App, mainWindow: BrowserWindow) {
   setupTrayContextMenu(app, mainWindow, tray);
   tray.setToolTip("WhatsApp");
   tray.on("click", function () {
-    mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show();
+    if (mainWindow.isVisible()) mainWindow.hide()
+    else mainWindow.show()
   });
 }
 
@@ -252,7 +251,7 @@ async function setupTray(app: App, mainWindow: BrowserWindow) {
 app.on("ready", async function () {
   const mainWindow = await createWindow();
 
-  app.on("second-instance", function (e, commandLine) {
+  app.on("second-instance", function () {
     if (mainWindow) {
       if (mainWindow.isMinimized()) {
         mainWindow.restore();

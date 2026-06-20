@@ -27,6 +27,5 @@
  */
 
 window.addEventListener("online", function () {
-  // @ts-ignore
   window.electronAPI.retryLoad();
 });

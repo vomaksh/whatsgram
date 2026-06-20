@@ -39,6 +39,7 @@ export class AppConfig {
     let configObj: unknown;
     try {
       configObj = JSON.parse(f);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       throw new Error("Invalid config format.");
     }
