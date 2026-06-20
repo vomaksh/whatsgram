@@ -10,7 +10,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint ."
   },
   "keywords": [
     "whatsapp",
@@ -40,13 +40,14 @@
     "@electron-forge/plugin-fuses": "^7.11.2",
     "@electron-forge/plugin-vite": "^7.11.2",
     "@electron/fuses": "^1.8.0",
+    "@eslint/js": "^9.39.4",
     "@types/electron-squirrel-startup": "^1.0.2",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
     "electron": "42.4.1",
-    "eslint": "^8.57.1",
+    "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
+    "globals": "^17.6.0",
     "typescript": "~6.0.3",
+    "typescript-eslint": "^8.61.1",
     "vite": "^5.4.21"
   },
   "dependencies": {

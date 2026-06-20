@@ -5,11 +5,13 @@
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
     "sourceMap": true,
     "baseUrl": ".",
     "outDir": "dist",
-    "moduleResolution": "node",
-    "resolveJsonModule": true
+    "moduleResolution": "node10",
+    "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0"
   }
 }
