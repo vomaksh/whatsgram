@@ -26,6 +26,6 @@
  * ```
  */
 
-window.addEventListener("online", function () {
-  window.electronAPI.retryLoad();
-});
+window.addEventListener('online', function () {
+  window.electronAPI.retryLoad()
+})

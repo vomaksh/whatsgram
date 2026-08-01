@@ -1,23 +1,23 @@
-import fs from "node:fs";
+import fs from 'node:fs'
 
-const pkg = JSON.parse(fs.readFileSync("package.json", "utf-8"));
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
 
-const now = new Date();
-const year = String(now.getFullYear()).slice(-2);
-const month = String(now.getMonth() + 1).padStart(2, "0");
+const now = new Date()
+const year = String(now.getFullYear()).slice(-2)
+const month = String(now.getMonth() + 1).padStart(2, '0')
 
-const [oldYear, oldMonth, oldPatch] = pkg.version.split(".");
+const [oldYear, oldMonth, oldPatch] = pkg.version.split('.')
 
-let patch = 1;
+let patch = 1
 
 if (oldYear === year && oldMonth === month) {
-  patch = parseInt(oldPatch, 10) + 1;
+  patch = parseInt(oldPatch, 10) + 1
 }
 
-const newVersion = `${year}.${month}.${patch}`;
+const newVersion = `${year}.${month}.${patch}`
 
-pkg.version = newVersion;
+pkg.version = newVersion
 
-fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n");
+fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n')
 
-console.log(newVersion);
+console.log(newVersion)

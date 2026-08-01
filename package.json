@@ -1,16 +1,24 @@
 {
-  "name": "whazzup",
-  "productName": "WhazzUp",
-  "version": "26.06.14",
+  "name": "whatsgram",
+  "productName": "Whatsgram",
+  "desktopName": "com.vomaksh.whazzup.desktop",
+  "version": "26.08.0",
   "description": "WhatsApp Client for Desktop",
-  "main": ".vite/build/main.js",
+  "main": "./out/main/index.js",
   "private": true,
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
-    "lint": "eslint ."
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "prebuild": "electron-vite build",
+    "format": "prettier --write .",
+    "lint": "eslint --cache .",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "build": "npm run typecheck && electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:linux": "npm run build && electron-builder --linux"
   },
   "keywords": [
     "whatsapp",
@@ -22,30 +30,24 @@
   },
   "license": "GPL-3.0-only",
   "devDependencies": {
-    "@electron-forge/cli": "^7.11.2",
-    "@electron-forge/maker-deb": "^7.11.2",
-    "@electron-forge/maker-flatpak": "^7.11.2",
-    "@electron-forge/maker-rpm": "^7.11.2",
-    "@electron-forge/maker-squirrel": "^7.11.2",
-    "@electron-forge/maker-zip": "^7.11.2",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.11.2",
-    "@electron-forge/plugin-fuses": "^7.11.2",
-    "@electron-forge/plugin-vite": "^7.11.2",
-    "@electron/fuses": "^1.8.0",
-    "@eslint/js": "^9.39.4",
-    "@types/electron-squirrel-startup": "^1.0.2",
-    "electron": "42.4.1",
+    "@electron-toolkit/eslint-config-prettier": "^3.0.0",
+    "@electron-toolkit/eslint-config-ts": "^3.1.0",
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
-    "globals": "^17.6.0",
+    "prettier": "^3.9.6",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.61.1",
-    "vite": "^5.4.21"
+    "vite": "^8.2.0"
   },
   "dependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@resvg/resvg-wasm": "^2.6.2",
     "electron-squirrel-startup": "^1.0.1",
-    "sharp": "^0.35.2",
     "zod": "^4.4.3"
   },
-  "packageManager": "pnpm@10.34.4+sha512.8768be55200ae3f2226b6527fcca2687e14bc4e5f12d7721a0f25da3df47915177058648db4177baf348120fa0ba2752d8d8d93f6beaf1fe64ae18da8de961af"
+  "packageManager": "pnpm@11.18.0+sha512.33d83c77da82f49fba836925c6f1b841181ec3132b670639bd012f7075f5c7cf634c5f870147c19aae7478fac01df09d8892e880454896edd23ee9b33757563c"
 }
