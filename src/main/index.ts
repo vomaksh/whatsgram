@@ -59,12 +59,11 @@ function openDownloadedFile(item: DownloadItem, filePath: string) {
 }
 
 async function createWindow() {
-  // if (!app.requestSingleInstanceLock()) {
-  //   console.log('Application instance is already running. Quitting....')
-  //   app.quit()
-  // }
+  if (!app.requestSingleInstanceLock()) {
+    console.log('Application instance is already running. Quitting....')
+    app.quit()
+  }
 
-  // load config file if exists
   const appConfig = new AppConfig(app)
   config = await appConfig.getConfig()
 
