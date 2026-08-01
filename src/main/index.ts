@@ -23,6 +23,7 @@ import {
 } from './constants'
 import { AppConfig, AppConfigType } from './config'
 import { debounce, getDefaultTrayIcon, getTrayFavicon, getUnreadCountFromFavicon } from './utils'
+import icon from '../../resources/icon.png?asset'
 
 app.setPath('userData', path.join(app.getPath('home'), '.config', APP_NAME))
 
@@ -48,14 +49,6 @@ function injectCSS(mainWindow: BrowserWindow, config: AppConfigType) {
   `)
 }
 
-function getAssetPath(...paths: string[]) {
-  const devMode = !app.isPackaged
-  const resourcesPath = devMode
-    ? path.join(app.getAppPath(), 'assets')
-    : path.join(process.resourcesPath, 'assets')
-  return path.join(resourcesPath, ...paths)
-}
-
 function openDownloadedFile(item: DownloadItem, filePath: string) {
   const mime = item.getMimeType()
   if (mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/')) {
@@ -66,10 +59,10 @@ function openDownloadedFile(item: DownloadItem, filePath: string) {
 }
 
 async function createWindow() {
-  if (!app.requestSingleInstanceLock()) {
-    console.log('Application instance is already running. Quitting....')
-    app.quit()
-  }
+  // if (!app.requestSingleInstanceLock()) {
+  //   console.log('Application instance is already running. Quitting....')
+  //   app.quit()
+  // }
 
   // load config file if exists
   const appConfig = new AppConfig(app)
@@ -84,7 +77,7 @@ async function createWindow() {
     height: winBounds.height,
     show: true,
     autoHideMenuBar: true,
-    icon: getAssetPath('icons', 'app.png'),
+    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       partition: appPartition
