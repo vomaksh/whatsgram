@@ -12,6 +12,7 @@ files:
 asarUnpack:
   - resources/**
 linux:
+  icon: build/icons
   target:
     - AppImage
     - deb

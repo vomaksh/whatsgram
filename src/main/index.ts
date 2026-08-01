@@ -172,6 +172,7 @@ async function createWindow() {
   mainWindow.on('close', saveBounds)
 
   mainWindow.webContents.on('page-favicon-updated', async (_ev, favicons) => {
+    console.log(favicons.length)
     if (favicons.length > 0) {
       const newFaviconUrl = favicons[favicons.length - 1]
       if (newFaviconUrl && newFaviconUrl) {
