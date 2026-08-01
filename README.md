@@ -1,4 +1,4 @@
-# WhazzUp
+# Whatsgram
 
 > This project is not affiliated with or endorsed by WhatsApp or Meta.
 
@@ -13,8 +13,8 @@ A minimal Electron wrapper for WhatsApp Web for Linux.
 ## Development
 
 ```sh
-git clone https://github.com/vomaksh/whazzup.git
-cd wazzup
+git clone https://github.com/vomaksh/whatsgram.git
+cd whatsgram
 pnpm install
 pnpm start
 ```
@@ -22,7 +22,7 @@ pnpm start
 ## Build
 
 ```sh
-pnpm make
+pnpm build:linux
 ```
 
 ## License
