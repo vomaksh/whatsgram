@@ -2,6 +2,9 @@ appId: com.vomaksh.whatsgram
 productName: Whatsgram
 directories:
   buildResources: build
+extraResources:
+  - from: resources/fonts
+    to: fonts
 files:
   - '!**/.vscode/*'
   - '!src/*'

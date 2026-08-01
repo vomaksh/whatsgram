@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Resvg, initWasm } from '@resvg/resvg-wasm'
-import { nativeImage } from 'electron'
+import { app, nativeImage } from 'electron'
 import { readFile } from 'fs/promises'
+import { join } from 'path'
 
 let resvgInit = false
 
-export function debounce(fn: (...args: any[]) => void, milliseconds: number) {
+export function debounce(fn: (...args: unknown[]) => void, milliseconds: number) {
   let timerId: NodeJS.Timeout
 
-  return function (...args: any[]) {
+  return function (...args: unknown[]) {
     if (timerId) {
       clearTimeout(timerId)
     }
@@ -34,12 +34,25 @@ export function getUnreadCountFromFavicon(faviconUrl: string) {
   return match ? match[1] : null
 }
 
+function getFontPath() {
+  if (app.isPackaged) {
+    return join(process.resourcesPath, 'fonts', 'Inter-Bold.ttf')
+  }
+  return join(app.getAppPath(), 'resources', 'fonts', 'Inter-Bold.ttf')
+}
+
 async function convertSVGToNativeImage(svg: string) {
   await ensureResvgWasm()
+  const fontBuffer = await readFile(getFontPath())
+
   const resvg = new Resvg(svg, {
     fitTo: {
       mode: 'width',
       value: 32
+    },
+    font: {
+      fontBuffers: [new Uint8Array(fontBuffer)],
+      defaultFontFamily: 'Inter'
     }
   })
     .render()
@@ -52,7 +65,7 @@ export async function getTrayFavicon(count: string) {
   if (count === '00') {
     svg = getTrayIcon('99+')
   } else {
-    svg = getTrayIcon(parseInt(count).toString())
+    svg = getTrayIcon(Number(parseInt(count)).toString())
   }
   return await convertSVGToNativeImage(svg)
 }
@@ -72,62 +85,63 @@ function escapeSvgText(value: string) {
 }
 
 export function getTrayIcon(count?: string) {
-  const safeCount = count ? escapeSvgText(count) : ''
-  const fontSize = !count
-    ? 0
-    : count.length <= 1
-      ? 200
-      : count.length === 2
-        ? 175
-        : count.length === 3
-          ? 145
-          : 120
+  const safeCount = count ? escapeSvgText(count.slice(0, 2)) : '···'
+  const hasCount = safeCount.length > 0
+  const isSingleDigit = safeCount.length === 1
+
+  const fontSize = isSingleDigit ? 500 : 370
+  const textY = isSingleDigit ? 525 : 480
 
   return `<svg
     xmlns="http://www.w3.org/2000/svg"
     width="1024"
     height="1024"
-    viewBox="215 215 595 505"
+    viewBox="175 18 674 674"
     role="img"
     aria-label="${safeCount ? `${safeCount} unread messages` : 'Chat icon'}"
   >
     <defs>
       <radialGradient id="bubbleFill" cx="50%" cy="32%" r="72%">
-        <stop offset="0%" stop-color="#4A94FF"/>
-        <stop offset="58%" stop-color="#347FF2"/>
         <stop offset="100%" stop-color="#2A70E8"/>
       </radialGradient>
     </defs>
 
+    <!-- Tail stays inside the circle's horizontal footprint -->
     <path
       d="
-        M 512 226
-        C 347 226 226 305 226 446
-        C 226 522 260 574 309 610
-        L 278 692
-        C 273 705 286 717 299 711
-        L 410 653
-        C 445 669 479 678 519 678
-        C 681 678 798 590 798 447
-        C 798 305 677 226 512 226
-        Z"
+        M 355 548
+        L 286 680
+        C 281 690 293 698 304 692
+        L 451 606
+        Z
+      "
       fill="url(#bubbleFill)"
       stroke="#0054D8"
       stroke-width="22"
       stroke-linejoin="round"
     />
 
+    <!-- Nearly fills the complete square viewBox -->
+    <circle
+      cx="512"
+      cy="342"
+      r="312"
+      fill="url(#bubbleFill)"
+      stroke="#0054D8"
+      stroke-width="22"
+    />
+
     ${
-      count
+      hasCount
         ? `<text
             x="512"
-            y="458"
+            y="${textY}"
             fill="#FFFFFF"
-            font-family="Arial, Helvetica, sans-serif"
+            font-family="Inter"
             font-size="${fontSize}"
             font-weight="700"
             text-anchor="middle"
-            dominant-baseline="middle"
+            font-variant-numeric="lining-nums tabular-nums"
           >${safeCount}</text>`
         : ''
     }

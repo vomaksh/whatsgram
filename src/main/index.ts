@@ -62,14 +62,13 @@ async function createWindow() {
   if (!app.requestSingleInstanceLock()) {
     console.log('Application instance is already running. Quitting....')
     app.quit()
+    return
   }
 
   const appConfig = new AppConfig(app)
   config = await appConfig.getConfig()
 
   Menu.setApplicationMenu(null)
-
-  const appPartition = 'persist:whatsapp'
 
   const mainWindow = new BrowserWindow({
     width: winBounds.width,
@@ -79,7 +78,7 @@ async function createWindow() {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      partition: appPartition
+      sandbox: false
     }
   })
 
@@ -89,9 +88,9 @@ async function createWindow() {
     })
   })
 
-  const winSession = session.fromPartition(appPartition)
+  // const winSession = session.fromPartition(appPartition)
 
-  winSession.on('will-download', (e, item) => {
+  session.defaultSession.on('will-download', (e, item) => {
     const fileName = item.getFilename()
     const savePath = path.join(app.getPath('downloads'), fileName)
 
@@ -117,13 +116,6 @@ async function createWindow() {
       userAgent: WHATSAPP_USER_AGENT
     })
   }
-  //  else {
-  //   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-  //     mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/offline.html`)
-  //   } else {
-  //     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/offline.html`))
-  //   }
-  // }
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith(WHATSAPP_WEB_URL)) {
@@ -164,23 +156,24 @@ async function createWindow() {
   mainWindow.on('close', saveBounds)
 
   mainWindow.webContents.on('page-favicon-updated', async (_ev, favicons) => {
-    console.log(favicons.length)
     if (favicons.length > 0) {
       const newFaviconUrl = favicons[favicons.length - 1]
-      if (newFaviconUrl && newFaviconUrl) {
-        const unreadCount = getUnreadCountFromFavicon(newFaviconUrl)
-        if (unreadCount && unreadCount != '0') {
-          const trayNativeImg = await getTrayFavicon(unreadCount)
-          tray.setImage(trayNativeImg)
-        } else {
-          const trayIcon = await getDefaultTrayIcon()
-          tray.setImage(trayIcon)
-        }
+      const unreadCount = getUnreadCountFromFavicon(newFaviconUrl)
+      if (unreadCount && unreadCount != '0') {
+        const trayNativeImg = await getTrayFavicon(unreadCount)
+        tray.setImage(trayNativeImg)
+      } else {
+        const trayIcon = await getDefaultTrayIcon()
+        tray.setImage(trayIcon)
       }
     }
   })
 
   mainWindow.on('close', (e) => {
+    if (!app.isPackaged) {
+      isQuitting = true
+      app.quit()
+    }
     if (!isQuitting) {
       e.preventDefault()
       mainWindow.hide()
