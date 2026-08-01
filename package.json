@@ -2,7 +2,7 @@
   "name": "whatsgram",
   "productName": "Whatsgram",
   "desktopName": "com.vomaksh.whazzup.desktop",
-  "version": "26.08.0",
+  "version": "26.08.1",
   "description": "WhatsApp Client for Desktop",
   "main": "./out/main/index.js",
   "private": true,
