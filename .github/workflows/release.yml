@@ -1,4 +1,4 @@
-name: Build and release whazzup
+name: Build and release whatsgram
 
 on:
   workflow_dispatch:
@@ -41,12 +41,8 @@ jobs:
           VERSION=$(node scripts/bump-version.mjs)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Build whazzup
-        run: |
-          set -o pipefail
-          DEBUG=electron-forge:* pnpm build:linux 2>&1 | tee electron_build.log
-          echo "exit=$?"
-          find out -maxdepth 8 -type f -print | sort || true
+      - name: Build whatsgram
+        run: pnpm build:linux
 
       - name: Commit version
         if: ${{ env.ACT != 'true' }}
