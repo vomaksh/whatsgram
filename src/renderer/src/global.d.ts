@@ -2,8 +2,9 @@ export {}
 
 declare global {
   interface Window {
-    electronAPI: {
-      retryLoad: () => void
+    loadingAPI: {
+      onConnectionStatusChange: (callback: (status: string) => void) => void
+      retry: () => void
     }
   }
 }

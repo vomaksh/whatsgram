@@ -1,6 +1,6 @@
 import { access, readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { App } from 'electron'
+import { app } from 'electron'
 import { z } from 'zod'
 import { CONFIG_FILE_NAME } from './constants'
 
@@ -15,7 +15,7 @@ export type AppConfigType = z.infer<typeof AppConfigSchema>
 export class AppConfig {
   declare configPath: string
   declare configFilePath: string
-  constructor(app: App) {
+  constructor() {
     this.configPath = app.getPath('userData')
     this.configFilePath = path.join(this.configPath, CONFIG_FILE_NAME)
   }
