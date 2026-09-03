@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import { app, BrowserWindow, Menu, shell, Tray, net, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, IpcMainEvent, Menu, shell, Tray, WebContents } from 'electron'
 import path, { join } from 'node:path'
 import {
   APP_NAME,
@@ -22,6 +22,7 @@ const winBounds = {
   height: 800
 }
 const WHATSAPP_LOAD_TIMEOUT_MS = 10_000
+const WHATSAPP_RETRY_DELAY_MS = 3_000
 
 function injectCSS(mainWindow: BrowserWindow, config: AppConfigType) {
   mainWindow.webContents.insertCSS(`
@@ -49,7 +50,7 @@ async function loadLocalPage(browserWindow: BrowserWindow, fileName: string) {
 async function createLoadingWindow() {
   const loadingWindow = new BrowserWindow({
     width: 352,
-    height: 352,
+    height: 500,
     show: false,
     resizable: false,
     maximizable: false,
@@ -58,6 +59,7 @@ async function createLoadingWindow() {
     title: APP_NAME,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
       sandbox: true
     }
   })
@@ -65,18 +67,6 @@ async function createLoadingWindow() {
   await loadLocalPage(loadingWindow, 'loading.html')
   loadingWindow.show()
   return loadingWindow
-}
-
-async function loadOfflinePage(mainWindow: BrowserWindow) {
-  await loadLocalPage(mainWindow, 'offline.html')
-}
-
-async function showOfflinePage(mainWindow: BrowserWindow) {
-  try {
-    await loadOfflinePage(mainWindow)
-  } catch (error) {
-    console.error('Could not load the offline page.', error)
-  }
 }
 
 async function loadWhatsApp(mainWindow: BrowserWindow) {
@@ -98,17 +88,35 @@ async function loadWhatsApp(mainWindow: BrowserWindow) {
       }),
       loadTimeout
     ])
+
+    return true
   } catch (error) {
     console.error('Could not load WhatsApp Web.', error)
-
-    if (!mainWindow.isDestroyed()) {
-      await showOfflinePage(mainWindow)
-    }
+    return false
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId)
     }
   }
+}
+
+function waitForRetry(ms: number, sender: WebContents) {
+  return new Promise<void>((resolve) => {
+    function finishWaiting() {
+      clearTimeout(timeoutId)
+      ipcMain.removeListener('retry-load', handleRetry)
+      resolve()
+    }
+
+    const handleRetry = (event: IpcMainEvent) => {
+      if (event.sender === sender) {
+        finishWaiting()
+      }
+    }
+
+    const timeoutId = setTimeout(finishWaiting, ms)
+    ipcMain.on('retry-load', handleRetry)
+  })
 }
 
 async function createWindow() {
@@ -131,7 +139,6 @@ async function createWindow() {
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
   })
@@ -154,10 +161,23 @@ async function createWindow() {
       mainWindow.show()
     }
 
+    let didLoad = false
+
     try {
-      await loadWhatsApp(mainWindow)
+      while (!didLoad && !mainWindow.isDestroyed()) {
+        didLoad = await loadWhatsApp(mainWindow)
+
+        if (!didLoad && !mainWindow.isDestroyed()) {
+          if (loadingWindow && !loadingWindow.isDestroyed()) {
+            loadingWindow.webContents.send('connection-status', 'offline')
+            await waitForRetry(WHATSAPP_RETRY_DELAY_MS, loadingWindow.webContents)
+          } else {
+            await new Promise<void>((resolve) => setTimeout(resolve, WHATSAPP_RETRY_DELAY_MS))
+          }
+        }
+      }
     } finally {
-      if (!mainWindow.isDestroyed()) {
+      if (didLoad && !mainWindow.isDestroyed()) {
         mainWindow.show()
         mainWindow.focus()
       }
@@ -167,12 +187,6 @@ async function createWindow() {
       isLoadingWhatsApp = false
     }
   }
-
-  ipcMain.on('retry-load', (event) => {
-    if (event.sender === mainWindow.webContents) {
-      void startWhatsAppLoad()
-    }
-  })
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith(WHATSAPP_WEB_URL)) {
@@ -237,12 +251,7 @@ async function createWindow() {
     }
   })
 
-  if (net.isOnline()) {
-    void startWhatsAppLoad()
-  } else {
-    await showOfflinePage(mainWindow)
-    mainWindow.show()
-  }
+  void startWhatsAppLoad()
 
   return mainWindow
 }

@@ -1,9 +1,8 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
-//
-
 import { contextBridge, ipcRenderer } from 'electron'
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  retryLoad: () => ipcRenderer.send('retry-load')
+contextBridge.exposeInMainWorld('loadingAPI', {
+  onConnectionStatusChange: (callback: (status: string) => void) => {
+    ipcRenderer.on('connection-status', (_event, status: string) => callback(status))
+  },
+  retry: () => ipcRenderer.send('retry-load')
 })
