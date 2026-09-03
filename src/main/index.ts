@@ -1,19 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
-import {
-  App,
-  app,
-  BrowserWindow,
-  DownloadItem,
-  Menu,
-  Notification,
-  session,
-  shell,
-  Tray,
-  net,
-  ipcMain
-} from 'electron'
+import { app, BrowserWindow, Menu, shell, Tray, net, ipcMain } from 'electron'
 import path, { join } from 'node:path'
-import { existsSync } from 'node:fs'
 import {
   APP_NAME,
   WHATSAPP_FONT_FAMILY,
@@ -34,6 +21,7 @@ const winBounds = {
   width: 1099,
   height: 800
 }
+const WHATSAPP_LOAD_TIMEOUT_MS = 10_000
 
 function injectCSS(mainWindow: BrowserWindow, config: AppConfigType) {
   mainWindow.webContents.insertCSS(`
@@ -49,12 +37,77 @@ function injectCSS(mainWindow: BrowserWindow, config: AppConfigType) {
   `)
 }
 
-function openDownloadedFile(item: DownloadItem, filePath: string) {
-  const mime = item.getMimeType()
-  if (mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/')) {
-    shell.openPath(filePath)
-  } else {
-    shell.showItemInFolder(filePath)
+async function loadLocalPage(browserWindow: BrowserWindow, fileName: string) {
+  if (!app.isPackaged) {
+    await browserWindow.loadFile(join(app.getAppPath(), 'src/renderer', fileName))
+    return
+  }
+
+  await browserWindow.loadFile(join(__dirname, '../renderer', fileName))
+}
+
+async function createLoadingWindow() {
+  const loadingWindow = new BrowserWindow({
+    width: 352,
+    height: 352,
+    show: false,
+    resizable: false,
+    maximizable: false,
+    autoHideMenuBar: true,
+    backgroundColor: '#12181c',
+    title: APP_NAME,
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      sandbox: true
+    }
+  })
+
+  await loadLocalPage(loadingWindow, 'loading.html')
+  loadingWindow.show()
+  return loadingWindow
+}
+
+async function loadOfflinePage(mainWindow: BrowserWindow) {
+  await loadLocalPage(mainWindow, 'offline.html')
+}
+
+async function showOfflinePage(mainWindow: BrowserWindow) {
+  try {
+    await loadOfflinePage(mainWindow)
+  } catch (error) {
+    console.error('Could not load the offline page.', error)
+  }
+}
+
+async function loadWhatsApp(mainWindow: BrowserWindow) {
+  let timeoutId: NodeJS.Timeout | undefined
+
+  try {
+    const loadTimeout = new Promise<never>((_resolve, reject) => {
+      timeoutId = setTimeout(() => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.stop()
+        }
+        reject(new Error(`WhatsApp Web did not load within ${WHATSAPP_LOAD_TIMEOUT_MS} ms.`))
+      }, WHATSAPP_LOAD_TIMEOUT_MS)
+    })
+
+    await Promise.race([
+      mainWindow.loadURL(WHATSAPP_WEB_URL, {
+        userAgent: WHATSAPP_USER_AGENT
+      }),
+      loadTimeout
+    ])
+  } catch (error) {
+    console.error('Could not load WhatsApp Web.', error)
+
+    if (!mainWindow.isDestroyed()) {
+      await showOfflinePage(mainWindow)
+    }
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+    }
   }
 }
 
@@ -65,7 +118,7 @@ async function createWindow() {
     return
   }
 
-  const appConfig = new AppConfig(app)
+  const appConfig = new AppConfig()
   config = await appConfig.getConfig()
 
   Menu.setApplicationMenu(null)
@@ -73,7 +126,8 @@ async function createWindow() {
   const mainWindow = new BrowserWindow({
     width: winBounds.width,
     height: winBounds.height,
-    show: true,
+    show: false,
+    backgroundColor: '#12181c',
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -82,40 +136,43 @@ async function createWindow() {
     }
   })
 
-  ipcMain.on('retry-load', () => {
-    mainWindow.loadURL(WHATSAPP_WEB_URL, {
-      userAgent: WHATSAPP_USER_AGENT
-    })
-  })
+  let isLoadingWhatsApp = false
 
-  // const winSession = session.fromPartition(appPartition)
+  async function startWhatsAppLoad() {
+    if (isLoadingWhatsApp || mainWindow.isDestroyed()) {
+      return
+    }
 
-  session.defaultSession.on('will-download', (e, item) => {
-    const fileName = item.getFilename()
-    const savePath = path.join(app.getPath('downloads'), fileName)
+    isLoadingWhatsApp = true
+    let loadingWindow: BrowserWindow | undefined
 
-    if (existsSync(savePath)) {
-      e.preventDefault()
-      openDownloadedFile(item, savePath)
-    } else {
-      item.setSavePath(savePath)
-      item.once('done', (_e, state) => {
-        if (state === 'completed') {
-          new Notification({
-            title: `Download completed`,
-            body: `${fileName}`
-          }).show()
-          openDownloadedFile(item, savePath)
-        }
-      })
+    try {
+      loadingWindow = await createLoadingWindow()
+      mainWindow.hide()
+    } catch (error) {
+      console.error('Could not load the loading page.', error)
+      mainWindow.show()
+    }
+
+    try {
+      await loadWhatsApp(mainWindow)
+    } finally {
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.show()
+        mainWindow.focus()
+      }
+      if (loadingWindow && !loadingWindow.isDestroyed()) {
+        loadingWindow.close()
+      }
+      isLoadingWhatsApp = false
+    }
+  }
+
+  ipcMain.on('retry-load', (event) => {
+    if (event.sender === mainWindow.webContents) {
+      void startWhatsAppLoad()
     }
   })
-
-  if (net.isOnline()) {
-    mainWindow.loadURL(WHATSAPP_WEB_URL, {
-      userAgent: WHATSAPP_USER_AGENT
-    })
-  }
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith(WHATSAPP_WEB_URL)) {
@@ -134,14 +191,14 @@ async function createWindow() {
     })
   }
 
-  setupTray(app, mainWindow)
+  await setupTray(mainWindow)
 
   mainWindow.on('show', () => {
-    setupTrayContextMenu(app, mainWindow, tray)
+    setupTrayContextMenu(mainWindow, tray)
   })
 
   mainWindow.on('hide', () => {
-    setupTrayContextMenu(app, mainWindow, tray)
+    setupTrayContextMenu(mainWindow, tray)
   })
 
   function saveBounds() {
@@ -180,10 +237,17 @@ async function createWindow() {
     }
   })
 
+  if (net.isOnline()) {
+    void startWhatsAppLoad()
+  } else {
+    await showOfflinePage(mainWindow)
+    mainWindow.show()
+  }
+
   return mainWindow
 }
 
-function setupTrayContextMenu(app: App, mainWindow: BrowserWindow, tray: Tray) {
+function setupTrayContextMenu(mainWindow: BrowserWindow, tray: Tray) {
   const windowVisible = mainWindow.isVisible()
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -201,10 +265,10 @@ function setupTrayContextMenu(app: App, mainWindow: BrowserWindow, tray: Tray) {
   tray.setContextMenu(contextMenu)
 }
 
-async function setupTray(app: App, mainWindow: BrowserWindow) {
+async function setupTray(mainWindow: BrowserWindow) {
   const trayIcon = await getDefaultTrayIcon()
   tray = new Tray(trayIcon)
-  setupTrayContextMenu(app, mainWindow, tray)
+  setupTrayContextMenu(mainWindow, tray)
   tray.setToolTip('WhatsApp')
   tray.on('click', function () {
     if (mainWindow.isVisible()) mainWindow.hide()

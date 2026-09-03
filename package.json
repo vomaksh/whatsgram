@@ -33,21 +33,21 @@
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
-    "electron": "^43.2.0",
+    "electron": "^43.5.1",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.9.6",
     "typescript": "~6.0.3",
-    "vite": "^8.2.0"
+    "vite": "^8.2.2"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@resvg/resvg-wasm": "^2.6.2",
     "electron-squirrel-startup": "^1.0.1",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "packageManager": "pnpm@11.18.0+sha512.33d83c77da82f49fba836925c6f1b841181ec3132b670639bd012f7075f5c7cf634c5f870147c19aae7478fac01df09d8892e880454896edd23ee9b33757563c"
 }

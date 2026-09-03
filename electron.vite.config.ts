@@ -1,7 +1,18 @@
 import { defineConfig } from 'electron-vite'
+import { resolve } from 'node:path'
 
 export default defineConfig({
   main: {},
   preload: {},
-  renderer: {}
+  renderer: {
+    build: {
+      rollupOptions: {
+        input: {
+          index: resolve('src/renderer/index.html'),
+          loading: resolve('src/renderer/loading.html'),
+          offline: resolve('src/renderer/offline.html')
+        }
+      }
+    }
+  }
 })
