@@ -25,8 +25,8 @@ importers:
         version: 4.5.4
     devDependencies:
       '@electron-toolkit/eslint-config-prettier':
-        specifier: ^3.0.0
-        version: 3.0.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(prettier@3.9.6)
+        specifier: ^3.0.1
+        version: 3.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(prettier@3.9.6)
       '@electron-toolkit/eslint-config-ts':
         specifier: ^3.1.0
         version: 3.1.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
@@ -141,8 +141,8 @@ packages:
     resolution: {integrity: sha512-+bqFCP98pLI0Tt0XQo1TmlXtwjWchISndDOxCkEcIuUgXWpBnLyRI+2DU+mesvnMMX6L1XDqYNA0lXNDHd/yiA==}
     engines: {node: '>=22.12.0'}
 
-  '@electron-toolkit/eslint-config-prettier@3.0.0':
-    resolution: {integrity: sha512-YapmIOVkbYdHLuTa+ad1SAVtcqYL9A/SJsc7cxQokmhcwAwonGevNom37jBf9slXegcZ/Slh01I/JARG1yhNFw==}
+  '@electron-toolkit/eslint-config-prettier@3.0.1':
+    resolution: {integrity: sha512-OPdK26E9Nqjg3j8CW8gMV+gV8D3+S0WbbOGEeN8dTjWsHFBqVGxEevNdght2dJYelmeN58pqyjtEg0WTjq0gwg==}
     peerDependencies:
       eslint: '>= 9.0.0'
       prettier: '>= 3.0.0'
@@ -694,6 +694,7 @@ packages:
   '@xmldom/xmldom@0.8.13':
     resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abbrev@4.0.0:
     resolution: {integrity: sha512-a1wflyaL0tHtJSmLSOVybYhy22vRih4eduhhrkcjgrWGnRfrZtovJ2FRjxuTtkkj47O/baf0R86QU5OuYpz8fA==}
@@ -2584,7 +2585,7 @@ snapshots:
 
   '@electron-internal/extract-zip@1.0.5': {}
 
-  '@electron-toolkit/eslint-config-prettier@3.0.0(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(prettier@3.9.6)':
+  '@electron-toolkit/eslint-config-prettier@3.0.1(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))(prettier@3.9.6)':
     dependencies:
       eslint: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
       eslint-config-prettier: 10.1.8(eslint@9.39.5(jiti@2.7.0)(supports-color@7.2.0))
